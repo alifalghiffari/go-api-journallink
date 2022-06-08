@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ruang-guru/playground/backend/basic-golang/cashier-app/repository"
+	"github.com/ruang-guru/playground/backend/database/assigment/cashier-app/repository"
 )
 
 type API struct {
@@ -12,31 +12,28 @@ type API struct {
 	productsRepo    repository.ProductRepository
 	cartItemRepo    repository.CartItemRepository
 	transactionRepo repository.TransactionRepository
+	salesRepo       repository.SalesRepository
 	mux             *http.ServeMux
 }
 
-func NewAPI(usersRepo repository.UserRepository, productsRepo repository.ProductRepository, cartItemRepo repository.CartItemRepository, transactionRepo repository.TransactionRepository) API {
+func NewAPI(usersRepo repository.UserRepository, productsRepo repository.ProductRepository, cartItemRepo repository.CartItemRepository, transactionRepo repository.TransactionRepository, salesRepo repository.SalesRepository) API {
 	mux := http.NewServeMux()
 	api := API{
-		usersRepo, productsRepo, cartItemRepo, transactionRepo, mux,
+		usersRepo, productsRepo, cartItemRepo, transactionRepo, salesRepo, mux,
 	}
 
-	mux.HandleFunc("/api/user/login", api.login)
-	mux.HandleFunc("/api/user/logout", api.logout)
+	mux.Handle("/api/user/login", api.POST(http.HandlerFunc(api.login)))
+	mux.Handle("/api/user/logout", api.POST(http.HandlerFunc(api.logout)))
 
 	// API with AuthMiddleware:
-	mux.Handle("/api/dashboard", api.AuthMiddleWare(http.HandlerFunc(api.dashboard)))
-	mux.Handle("/api/products", api.AuthMiddleWare(http.HandlerFunc(api.productList)))
-	mux.Handle("/api/cart/add", api.AuthMiddleWare(http.HandlerFunc(api.addToCart)))
-	mux.Handle("/api/cart/clear", api.AuthMiddleWare(http.HandlerFunc(api.clearCart)))
-	mux.Handle("/api/carts", api.AuthMiddleWare(http.HandlerFunc(api.cartList)))
+	mux.Handle("/api/products", api.GET(api.AuthMiddleWare(http.HandlerFunc(api.productList))))
+	mux.Handle("/api/cart/add", api.POST(api.AuthMiddleWare(http.HandlerFunc(api.addToCart))))
+	mux.Handle("/api/cart/clear", api.GET(api.AuthMiddleWare(http.HandlerFunc(api.clearCart))))
+	mux.Handle("/api/carts", api.GET(api.AuthMiddleWare(http.HandlerFunc(api.cartList))))
+	mux.Handle("/api/pay", api.POST(api.AuthMiddleWare(http.HandlerFunc(api.pay))))
 
-	// mux.HandleFunc("/api/dashboard", api.dashboard)
-	// mux.HandleFunc("/api/products", api.productList)
-	// mux.HandleFunc("/api/cart/add", api.addToCart)
-	// mux.HandleFunc("/api/cart/clear", api.clearCart)
-	// mux.HandleFunc("/api/cart/clear", api.clearCart)
-	// mux.HandleFunc("/api/carts", api.cartList)
+	// API with AuthMiddleware and AdminMiddleware
+	mux.Handle("/api/admin/sales", api.GET(api.AuthMiddleWare(api.AdminMiddleware(http.HandlerFunc(api.getDashboard)))))
 
 	return api
 }

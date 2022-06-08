@@ -1,136 +1,121 @@
 package repository
 
 import (
-	"fmt"
-	"strconv"
-
-	"github.com/ruang-guru/playground/backend/basic-golang/cashier-app/db"
+	"database/sql"
+	"errors"
 )
 
 type UserRepository struct {
-	db db.DB
+	db *sql.DB
 }
 
-func NewUserRepository(db db.DB) UserRepository {
-	return UserRepository{db}
+func NewUserRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{db: db}
 }
 
-func (u *UserRepository) LoadOrCreate() ([]User, error) {
-	records, err := u.db.Load("users")
+func (u *UserRepository) FetchUserByID(id int64) (User, error) {
+	var sqlStmt string
+	var user User
+
+	sqlStmt = `SELECT id, username, password, role, loggedin FROM users WHERE id = ?;`
+
+	row := u.db.QueryRow(sqlStmt, id)
+	err := row.Scan(
+		&user.ID,
+		&user.Username,
+		&user.Password,
+		&user.Role,
+		&user.Loggedin,
+	)
+
+	return user, err
+}
+
+func (u *UserRepository) FetchUsers() ([]User, error) {
+	var sqlStmt string
+	var users []User
+
+	sqlStmt = `SELECT id, username, password, role, loggedin FROM users`
+
+	rows, err := u.db.Query(sqlStmt)
 	if err != nil {
-		records = [][]string{
-			{"username", "password", "loggedin"},
-		}
-		if err := u.db.Save("users", records); err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
+	defer rows.Close()
 
-	result := make([]User, 0)
-	for i := 1; i < len(records); i++ {
-		loggedin, err := strconv.ParseBool(records[i][2])
+	var user User
+	for rows.Next() {
+		err := rows.Scan(
+			&user.ID,
+			&user.Username,
+			&user.Password,
+			&user.Role,
+			&user.Loggedin,
+		)
+
 		if err != nil {
 			return nil, err
 		}
-
-		user := User{
-			Username: records[i][0],
-			Password: records[i][1],
-			Loggedin: loggedin,
-		}
-		result = append(result, user)
+		users = append(users, user)
 	}
 
-	return result, nil
+	return users, nil
 }
 
-func (u *UserRepository) SelectAll() ([]User, error) {
-	user, err := u.LoadOrCreate()
+func (u *UserRepository) Login(username string, password string) (*string, error) {
+	var sqlStmt string
+
+	sqlStmt = `SELECT id, username, password, role, loggedin FROM users WHERE username = ? AND password = ?;`
+
+	row := u.db.QueryRow(sqlStmt, username, password)
+
+	var user User
+	err := row.Scan(
+		&user.ID,
+		&user.Username,
+		&user.Password,
+		&user.Role,
+		&user.Loggedin,
+	)
+
 	if err != nil {
-		return nil, err
-	}
-	return user, nil
-
-}
-
-func (u UserRepository) Login(username string, password string) (*string, error) {
-	if err := u.LogoutAll(); err != nil {
-		return nil, err
+		return nil, errors.New("Login Failed")
 	}
 
-	users, err := u.SelectAll()
-	if err != nil {
-		return nil, err
-	}
-	for _, user := range users {
-		if user.Username == username && user.Password == password {
-			u.changeStatus(username, true)
-			return &username, nil
+	if user.Username == username && user.Password == password {
+		sqlStmtStatus := `UPDATE users SET loggedin = TRUE WHERE username = ?;`
+		_, err := u.db.Exec(sqlStmtStatus, username)
+		if err != nil {
+			return nil, err
 		}
+		return &user.Username, nil
 	}
-	return nil, fmt.Errorf("Login Failed")
+
+	return nil, errors.New("Login Failed")
+
 }
 
-func (u *UserRepository) FindLoggedinUser() (*string, error) {
-	users, err := u.SelectAll()
-	if err != nil {
-		return nil, err
-	}
-	for _, user := range users {
-		if user.Loggedin {
-			return &user.Username, nil
-		}
-	}
-	return nil, fmt.Errorf("no user is logged in")
-}
+func (u *UserRepository) InsertUser(username string, password string, role string, loggedin bool) error {
+	var sqlStmt string
 
-func (u *UserRepository) Logout(username string) error {
-	userLogin, err := u.FindLoggedinUser()
+	sqlStmt = `INSERT INTO users (username, password, role, loggedin) VALUES (?, ?, ?, ?);`
+
+	_, err := u.db.Exec(sqlStmt, username, password, role, loggedin)
 	if err != nil {
 		return err
-	}
-	return u.changeStatus(*userLogin, false)
-}
-
-func (u *UserRepository) Save(users []User) error {
-	records := [][]string{
-		{"username", "password", "loggedin"},
-	}
-
-	for i := 0; i < len(users); i++ {
-		records = append(records, []string{
-			users[i].Username,
-			users[i].Password,
-			strconv.FormatBool(users[i].Loggedin),
-		})
-	}
-	return u.db.Save("users", records)
-}
-
-func (u *UserRepository) changeStatus(username string, status bool) error {
-	users, err := u.LoadOrCreate()
-	if err != nil {
-		return err
-	}
-
-	for i := 0; i < len(users); i++ {
-		if users[i].Username == username {
-			users[i].Loggedin = status
-		}
-	}
-
-	return u.Save(users)
-}
-
-func (u *UserRepository) LogoutAll() error {
-	users, err := u.SelectAll()
-	if err != nil {
-		return err
-	}
-
-	for _, user := range users {
-		u.Logout(user.Username)
 	}
 
 	return nil
+}
+
+func (u *UserRepository) FetchUserRole(username string) (*string, error) {
+	var sqlStmt string
+	var role string
+
+	sqlStmt = `SELECT role FROM users WHERE username = ?;`
+
+	row := u.db.QueryRow(sqlStmt, username)
+	err := row.Scan(&role)
+
+	return &role, err
 }

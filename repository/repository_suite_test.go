@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestCashierapp(t *testing.T) {
+func TestRepository(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Cashierapp Suite")
+	RunSpecs(t, "Repository Suite")
 }

@@ -1,124 +1,139 @@
 package repository
 
 import (
-	"strconv"
+	"database/sql"
 
-	"github.com/ruang-guru/playground/backend/basic-golang/cashier-app/db"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type CartItemRepository struct {
-	db db.DB
+	db *sql.DB
 }
 
-func NewCartItemRepository(db db.DB) CartItemRepository {
-	return CartItemRepository{db}
+func NewCartItemRepository(db *sql.DB) *CartItemRepository {
+	return &CartItemRepository{db: db}
 }
 
-func (u *CartItemRepository) LoadOrCreate() ([]CartItem, error) {
-	records, err := u.db.Load("cart_items")
-	if err != nil {
-		records = [][]string{
-			{"category", "product_name", "price", "quantity"},
-		}
-		if err := u.db.Save("cart_items", records); err != nil {
-			return nil, err
-		}
-	}
+func (c *CartItemRepository) FetchCartItems() ([]CartItem, error) {
+	var sqlStatement string
+	var cartItems []CartItem
 
-	result := make([]CartItem, 0)
-	for i := 1; i < len(records); i++ {
-		price, err := strconv.Atoi(records[i][2])
-		if err != nil {
-			return nil, err
-		}
+	//TODO: add sql statement here
+	//HINT: join table cart_items and products
+	sqlStatement = `
+		SELECT c.id, p.category, c.product_id, p.product_name, c.quantity, p.price
+		FROM cart_items c
+		JOIN products p ON c.product_id = p.id
+	`
 
-		qty, err := strconv.Atoi(records[i][3])
-		if err != nil {
-			return nil, err
-		}
-
-		cartItem := CartItem{
-			Category:    records[i][0],
-			ProductName: records[i][1],
-			Price:       price,
-			Quantity:    qty,
-		}
-		result = append(result, cartItem)
-	}
-
-	return result, nil
-}
-
-func (u *CartItemRepository) Save(cartItems []CartItem) error {
-	records := [][]string{
-		{"category", "product_name", "price", "quantity"},
-	}
-	for i := 0; i < len(cartItems); i++ {
-		records = append(records, []string{
-			cartItems[i].Category,
-			cartItems[i].ProductName,
-			strconv.Itoa(cartItems[i].Price),
-			strconv.Itoa(cartItems[i].Quantity),
-		})
-	}
-	return u.db.Save("cart_items", records)
-}
-
-func (u *CartItemRepository) SelectAll() ([]CartItem, error) {
-	cartItems, err := u.LoadOrCreate()
+	rows, err := c.db.Query(sqlStatement)
 	if err != nil {
 		return nil, err
 	}
+
+	var cartItem CartItem
+	for rows.Next() {
+		err := rows.Scan(
+			&cartItem.ID,
+			&cartItem.Category,
+			&cartItem.ProductID,
+			&cartItem.ProductName,
+			&cartItem.Quantity,
+			&cartItem.Price,
+		)
+		if err != nil {
+			return nil, err
+		}
+		cartItems = append(cartItems, cartItem)
+	}
+
 	return cartItems, nil
-	// return []CartItem{}, nil // TODO: replace this
 }
 
-func (u *CartItemRepository) Add(product Product) error {
-	cartItems, err := u.LoadOrCreate()
+func (c *CartItemRepository) FetchCartByProductID(productID int64) (CartItem, error) {
+	var cartItem CartItem
+	var sqlStatement string
+	//TODO : you must fetch the cart by product id
+	//HINT : you can use the where statement
+	sqlStatement = `SELECT c.id, p.category, c.product_id, p.product_name, c.quantity 
+	FROM cart_items c
+	JOIN products p ON c.product_id = p.id
+	WHERE c.product_id = ?
+	LIMIT 1;`
+
+	row := c.db.QueryRow(sqlStatement, productID)
+	err := row.Scan(
+		&cartItem.ID,
+		&cartItem.Category,
+		&cartItem.ProductID,
+		&cartItem.ProductName,
+		&cartItem.Quantity,
+	)
+	if err != nil {
+		return cartItem, err
+	}
+
+	return cartItem, nil
+}
+
+func (c *CartItemRepository) InsertCartItem(cartItem CartItem) error {
+	// TODO: you must insert the cart item
+	var sqlStatement string
+
+	sqlStatement = `INSERT INTO cart_items (product_id, quantity) VALUES (?, ?);`
+
+	_, err := c.db.Exec(sqlStatement, cartItem.ProductID, cartItem.Quantity)
 	if err != nil {
 		return err
 	}
-	for i := 0; i < len(cartItems); i++ {
-		if cartItems[i].Category == product.Category && cartItems[i].ProductName == product.ProductName {
-			cartItems[i].Quantity++
-			if err := u.Save(cartItems); err != nil {
-				return err
-			}
-			return nil
-		}
-	}
 
-	cartItems = append(cartItems, CartItem{
-		Category:    product.Category,
-		ProductName: product.ProductName,
-		Price:       product.Price,
-		Quantity:    1,
-	})
+	return nil
+}
 
-	if err := u.Save(cartItems); err != nil {
+func (c *CartItemRepository) IncrementCartItemQuantity(cartItem CartItem) error {
+	//TODO : you must update the quantity of the cart item
+	var sqlStatement string
+
+	sqlStatement = `UPDATE cart_items SET quantity = quantity + 1 WHERE id = ?;`
+
+	_, err := c.db.Exec(sqlStatement, cartItem.ID)
+	if err != nil {
 		return err
 	}
 
-	 return nil // TODO: replace this
+	return nil
 }
 
-func (u *CartItemRepository) ResetCartItems() error {
-	records := [][]string{
-		{"category", "product_name", "price", "quantity"},
+func (c *CartItemRepository) ResetCartItems() error {
+	//TODO : you must reset the cart items
+	//HINT : you can use the delete statement
+	var sqlStatement string
+
+	sqlStatement = `DELETE FROM cart_items;`
+
+	_, err := c.db.Exec(sqlStatement)
+	if err != nil {
+		return err
 	}
-	return u.db.Save("cart_items", records)
-	// return nil // TODO: replace this
+
+	return nil
 }
 
-func (u *CartItemRepository) TotalPrice() (int, error) {
-	cartItems, err := u.LoadOrCreate()
+func (c *CartItemRepository) TotalPrice() (int, error) {
+	var sqlStatement string
+	//TODO : you must calculate the total price of the cart items
+	//HINT : you can use the sum statement
+
+	sqlStatement = `SELECT SUM(p.price * c.quantity) 
+	FROM cart_items c
+	JOIN products p ON c.product_id = p.id;`
+
+	var totalPrice int
+	row := c.db.QueryRow(sqlStatement)
+	err := row.Scan(&totalPrice)
 	if err != nil {
 		return 0, err
 	}
-	total := 0
-	for i := 0; i < len(cartItems); i++ {
-		total += cartItems[i].Price * cartItems[i].Quantity
-	}
-	return total, nil
-	// return 0, nil // TODO: replace this
+
+	return totalPrice, nil
 }

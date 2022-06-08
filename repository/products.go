@@ -1,70 +1,85 @@
 package repository
 
-import (
-    "strconv"
-
-    "github.com/ruang-guru/playground/backend/basic-golang/cashier-app/db"
-)
+import "database/sql"
 
 type ProductRepository struct {
-    db db.DB
+	db *sql.DB
 }
 
-func NewProductRepository(db db.DB) ProductRepository {
-    return ProductRepository{db}
+func NewProductRepository(db *sql.DB) *ProductRepository {
+	return &ProductRepository{db: db}
 }
 
-func (u *ProductRepository) LoadOrCreate() ([]Product, error) {
-    records, err := u.db.Load("products")
-    if err != nil {
-        records = [][]string{
-            {"category", "product_name", "price"},
-        }
-        if err := u.db.Save("products", records); err != nil {
-            return nil, err
-        }
-    }
+func (p *ProductRepository) FetchProductByID(id int64) (Product, error) {
+	//TODO: You must implement this function fot fetch product by id
+	var sqlStatement string
+	var product Product
 
-    result := make([]Product, 0)
-    for i := 1; i < len(records); i++ {
-        price, err := strconv.Atoi(records[i][2])
-        if err != nil {
-            return nil, err
-        }
+	sqlStatement = `SELECT category, product_name, price, quantity FROM products WHERE id = ?;`
 
-        product := Product{
-            Category:    records[i][0],
-            ProductName: records[i][1],
-            Price:       price,
-        }
-        result = append(result, product)
-    }
+	row := p.db.QueryRow(sqlStatement, id)
+	product.ID = id
+	err := row.Scan(
+		&product.Category,
+		&product.ProductName,
+		&product.Price,
+		&product.Quantity,
+	)
+	if err != nil {
+		return product, err
+	}
 
-    return result, nil
-    //return []Product{}, nil // TODO: replace this
+	return product, nil
 }
 
-func (u *ProductRepository) SelectAll() ([]Product, error) {
-    records, err := u.db.Load("products")
-    if err != nil {
-        return nil, err
-    }
+func (p *ProductRepository) FetchProductByName(productName string) (Product, error) {
+	// TODO: You must implement this function for fetch product by name
+	var sqlStatement string
+	var product Product
 
-    result := make([]Product, 0)
-    for i := 1; i < len(records); i++ {
-        price, err := strconv.Atoi(records[i][2])
-        if err != nil {
-            return nil, err
-        }
+	sqlStatement = `SELECT id, category, price, quantity FROM products WHERE product_name = ?;`
 
-        product := Product{
-            Category:    records[i][0],
-            ProductName: records[i][1],
-            Price:       price,
-        }
-        result = append(result, product)
-    }
+	row := p.db.QueryRow(sqlStatement, productName)
+	product.ProductName = productName
+	err := row.Scan(
+		&product.ID,
+		&product.Category,
+		&product.Price,
+		&product.Quantity,
+	)
+	if err != nil {
+		return product, err
+	}
 
-    return result, nil
-    // return []Product{}, nil // TODO: replace this
+	return product, nil
+}
+
+func (p *ProductRepository) FetchProducts() ([]Product, error) {
+	// TODO: You must implement this function for fetch all products
+	var sqlStatement string
+	var products []Product
+
+	sqlStatement = `SELECT id, category, product_name, price, quantity FROM products`
+
+	rows, err := p.db.Query(sqlStatement)
+	if err != nil {
+		return nil, err
+	}
+
+	var product Product
+	for rows.Next() {
+		err := rows.Scan(
+			&product.ID,
+			&product.Category,
+			&product.ProductName,
+			&product.Price,
+			&product.Quantity,
+		)
+		if err != nil {
+			return nil, err
+		}
+		products = append(products, product)
+	}
+
+	return products, nil
 }
