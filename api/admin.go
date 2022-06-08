@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ruang-guru/playground/backend/database/assigment/cashier-app/repository"
+	"go-api-project/repository"
 )
 
 type AdminErrorResponse struct {

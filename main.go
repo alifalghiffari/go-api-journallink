@@ -3,8 +3,8 @@ package main
 import (
 	"database/sql"
 
-	"github.com/ruang-guru/playground/backend/database/assigment/cashier-app/api"
-	"github.com/ruang-guru/playground/backend/database/assigment/cashier-app/repository"
+	"go-api-project/api"
+	"go-api-project/repository"
 
 	_ "github.com/mattn/go-sqlite3"
 )
