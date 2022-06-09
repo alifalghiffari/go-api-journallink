@@ -2,7 +2,9 @@ package repository
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"errors"
+	"time"
 )
 
 type UserRepository struct {
@@ -63,44 +65,45 @@ func (u *UserRepository) FetchUsers() ([]User, error) {
 }
 
 func (u *UserRepository) Login(username string, password string) (*string, error) {
-	var sqlStmt string
+    var sqlStmt string
+    hashPassword := base64.StdEncoding.EncodeToString([]byte(password))
 
-	sqlStmt = `SELECT id, username, password, role, created_at FROM users WHERE username = ? AND password = ?;`
+    sqlStmt = `SELECT id, username, password, role, created_at FROM users WHERE username = ? AND password = ?`
 
-	row := u.db.QueryRow(sqlStmt, username, password)
+    row := u.db.QueryRow(sqlStmt, username, hashPassword)
 
-	var user User
-	err := row.Scan(
-		&user.ID,
-		&user.Username,
-		&user.Password,
-		&user.Role,
-		&user.created_at,
-	)
+    var user User
+    err := row.Scan(
+        &user.ID,
+        &user.Username,
+        &user.Password,
+        &user.Role,
+        &user.created_at,
+    )
 
-	if err != nil {
-		return nil, errors.New("Login Failed")
-	}
+    if err != nil {
+        return nil, errors.New("Invalid username or password")
+    }
 
-	if user.Username == username && user.Password == password {
-		sqlStmtStatus := `UPDATE users SET created_at = TRUE WHERE username = ?;`
-		_, err := u.db.Exec(sqlStmtStatus, username)
-		if err != nil {
-			return nil, err
-		}
-		return &user.Username, nil
-	}
+    if user.Username == username && user.Password == hashPassword {
+        sqlStmtStatus := `UPDATE users SET created_at = TRUE WHERE username = ?`
+        _, err := u.db.Exec(sqlStmtStatus, username)
+        if err != nil {
+            return nil, err
+        }
+        return &user.Username, nil
+    }
 
-	return nil, errors.New("Login Failed")
+    return nil, errors.New("Invalid username or password")
 
 }
 
-func (u *UserRepository) InsertUser(username string, password string, role string, created_at bool) error {
+func (u *UserRepository) InsertUser(username string, password string, role string) error {
 	var sqlStmt string
 
 	sqlStmt = `INSERT INTO users (username, password, role, created_at) VALUES (?, ?, ?, ?);`
 
-	_, err := u.db.Exec(sqlStmt, username, password, role, created_at)
+	_, err := u.db.Exec(sqlStmt, username, password, role, time.Now())
 	if err != nil {
 		return err
 	}

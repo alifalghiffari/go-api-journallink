@@ -11,6 +11,7 @@ import (
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Role	 string `json:"role"`
 }
 
 type LoginSuccessResponse struct {
@@ -86,6 +87,22 @@ func (api *API) login(w http.ResponseWriter, req *http.Request) {
 	})
 
 	json.NewEncoder(w).Encode(LoginSuccessResponse{Username: *res, Token: tokenString})
+}
+
+func (api *API) register(w http.ResponseWriter, req *http.Request) {
+    api.AllowOrigin(w, req)
+    var user User
+    err := json.NewDecoder(req.Body).Decode(&user)
+    if err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        return
+    }
+
+    err = api.usersRepo.InsertUser(user.Username, user.Password, user.Role)
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
 }
 
 func (api *API) logout(w http.ResponseWriter, req *http.Request) {
