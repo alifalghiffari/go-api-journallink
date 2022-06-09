@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"encoding/base64"
 	"errors"
 	"time"
 )
@@ -66,11 +65,11 @@ func (u *UserRepository) FetchUsers() ([]User, error) {
 
 func (u *UserRepository) Login(username string, password string) (*string, error) {
     var sqlStmt string
-    hashPassword := base64.StdEncoding.EncodeToString([]byte(password))
+    // hashPassword := base64.StdEncoding.EncodeToString([]byte(password))
 
     sqlStmt = `SELECT id, username, password, role, created_at FROM users WHERE username = ? AND password = ?`
 
-    row := u.db.QueryRow(sqlStmt, username, hashPassword)
+    row := u.db.QueryRow(sqlStmt, username, password)
 
     var user User
     err := row.Scan(
@@ -85,7 +84,7 @@ func (u *UserRepository) Login(username string, password string) (*string, error
         return nil, errors.New("Invalid username or password")
     }
 
-    if user.Username == username && user.Password == hashPassword {
+    if user.Username == username && user.Password == password {
         sqlStmtStatus := `UPDATE users SET created_at = TRUE WHERE username = ?`
         _, err := u.db.Exec(sqlStmtStatus, username)
         if err != nil {
