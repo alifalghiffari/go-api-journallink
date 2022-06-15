@@ -17,13 +17,58 @@ func main() {
 	CREATE TABLE IF NOT EXISTS users (
     id integer not null primary key AUTOINCREMENT,
     username varchar(255) not null,
+	email varchar(255) not null,
     password varchar(255) not null,
-    role varchar(255) not null,
-    created_at datetime not null
+    role "enum('mentor','mahasiswa')" not null DEFAULT 'mahasiswa',
+    created_at datetime not null,
+	updated_at datetime not null,
+	unique(email)
 );
 
-INSERT INTO users(username, password, role, created_at) VALUES
-    ('dito', 'dito332', 'mahasiswa', '');`)
+CREATE TABLE IF NOT EXISTS journals (
+    id integer not null primary key AUTOINCREMENT,
+    user_id integer default null,
+	isi varchar(255) not null,
+	status "enum('pending','review','revisi','selesai')" not null DEFAULT 'pending',
+	date_submit datetime not null,
+	created_at datetime not null,
+	updated_at datetime not null,
+	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO users (
+	username,
+	email,
+	password,
+	role,
+	created_at,
+	updated_at
+)
+VALUES (
+	'yap',
+	'yap@gmail.com',
+	'lntanasm',
+	'mentor',
+	'2022-06-13 22:04:59',
+	'2022-06-13 22:04:59'
+);
+
+INSERT INTO journals(
+	user_id,
+	isi,
+	status,
+	date_submit,
+	created_at,
+	updated_at
+)
+VALUES (
+	'4',
+	'jurnalny siapa',
+	'pending',
+	'2022-06-13 23:35:59',
+	'2022-06-13 23:35:59',
+	'2022-06-13 23:35:59'
+);`)
 
 	if err != nil {
 		panic(err)

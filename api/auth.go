@@ -10,6 +10,7 @@ import (
 
 type User struct {
 	Username string `json:"username"`
+	Email	 string `json:"email"`
 	Password string `json:"password"`
 	Role	 string `json:"role"`
 }
@@ -98,7 +99,7 @@ func (api *API) register(w http.ResponseWriter, req *http.Request) {
         return
     }
 
-    err = api.usersRepo.InsertUser(user.Username, user.Password, user.Role)
+    err = api.usersRepo.InsertUser(user.Username, user.Email, user.Password, user.Role)
     if err != nil {
         w.WriteHeader(http.StatusInternalServerError)
         return

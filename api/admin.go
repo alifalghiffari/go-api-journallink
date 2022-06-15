@@ -1,57 +1,31 @@
 package api
 
-import (
-	// "encoding/json"
-	// "net/http"
-	// "time"
-
-	// "go-api-project/repository"
-)
+// import (
+// 	"encoding/json"
+// 	"go-api-project/repository"
+// 	"net/http"
+// )
 
 type AdminErrorResponse struct {
 	Error string `json:"error"`
 }
 
-// type ProductSales struct {
-// 	Name     string `json:"name"`
-// 	Price    int    `json:"price"`
-// 	Category string `json:"category"`
-// 	Quantity int    `json:"quantity"`
-// }
-
 // type AdminResponse struct {
-// 	Sales []repository.Sales `json:"sales"`
+// 	Journals []repository.Journal `json:"journal"`
 // }
 
-// func (api *API) getDashboard(w http.ResponseWriter, req *http.Request) {
+// func (api *API) getAdminDashboard(w http.ResponseWriter, req *http.Request) {
 // 	api.AllowOrigin(w, req)
-// 	productName := req.URL.Query().Get("product_name")
-
-// 	startPeriod, _ := time.Parse("2006-01-02", req.URL.Query().Get("start_period"))
-// 	endPeriod, _ := time.Parse("2006-01-02", req.URL.Query().Get("end_period"))
-
-// 	getSalesRequest := repository.GetSalesRequest{
-// 		ProductName: productName,
-// 		StartPeriod: &startPeriod,
-// 		EndPeriod:   &endPeriod,
-// 	}
-
-// 	if req.URL.Query().Get("start_period") == "" {
-// 		getSalesRequest.StartPeriod = nil
-// 	}
-// 	if req.URL.Query().Get("end_period") == "" {
-// 		getSalesRequest.EndPeriod = nil
-// 	}
 
 // 	encoder := json.NewEncoder(w)
-
-// 	sales, err := api.salesRepo.FetchSales(getSalesRequest)
+// 	journal, err := api.journalRepo.FetchJournals()
 // 	if err != nil {
-// 		w.WriteHeader(http.StatusBadRequest)
-// 		encoder.Encode(CartErrorResponse{Error: err.Error()})
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		encoder.Encode(AdminErrorResponse{Error: err.Error()})
 // 		return
 // 	}
 
-// 	encoder.Encode(AdminResponse{Sales: sales})
-// 	w.WriteHeader(http.StatusOK)
+// 	encoder.Encode(journal)
+
+// 	return
 // }

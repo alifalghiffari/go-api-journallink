@@ -18,15 +18,17 @@ func (u *UserRepository) FetchUserByID(id int64) (User, error) {
 	var sqlStmt string
 	var user User
 
-	sqlStmt = `SELECT id, username, password, role, created_at FROM users WHERE id = ?;`
+	sqlStmt = `SELECT id, username, email, password, role, created_at, updated_at FROM users WHERE id = ?;`
 
 	row := u.db.QueryRow(sqlStmt, id)
 	err := row.Scan(
 		&user.ID,
 		&user.Username,
-		&user.Password,
+		&user.Email,
 		&user.Role,
-		&user.created_at,
+		&user.Password,
+		&user.Created_at,
+		&user.Updated_at,
 	)
 
 	return user, err
@@ -36,7 +38,7 @@ func (u *UserRepository) FetchUsers() ([]User, error) {
 	var sqlStmt string
 	var users []User
 
-	sqlStmt = `SELECT id, username, password, role, created_at FROM users`
+	sqlStmt = `SELECT id, username, email, password, role, created_at, updated_at FROM users`
 
 	rows, err := u.db.Query(sqlStmt)
 	if err != nil {
@@ -49,9 +51,11 @@ func (u *UserRepository) FetchUsers() ([]User, error) {
 		err := rows.Scan(
 			&user.ID,
 			&user.Username,
-			&user.Password,
+			&user.Email,
 			&user.Role,
-			&user.created_at,
+			&user.Password,
+			&user.Created_at,
+			&user.Updated_at,
 		)
 
 		if err != nil {
@@ -64,45 +68,36 @@ func (u *UserRepository) FetchUsers() ([]User, error) {
 }
 
 func (u *UserRepository) Login(username string, password string) (*string, error) {
-    var sqlStmt string
-    // hashPassword := base64.StdEncoding.EncodeToString([]byte(password))
-
-    sqlStmt = `SELECT id, username, password, role, created_at FROM users WHERE username = ? AND password = ?`
-
-    row := u.db.QueryRow(sqlStmt, username, password)
-
-    var user User
-    err := row.Scan(
-        &user.ID,
-        &user.Username,
-        &user.Password,
-        &user.Role,
-        &user.created_at,
-    )
-
-    if err != nil {
-        return nil, errors.New("Invalid username or password")
-    }
-
-    if user.Username == username && user.Password == password {
-        sqlStmtStatus := `UPDATE users SET created_at = TRUE WHERE username = ?`
-        _, err := u.db.Exec(sqlStmtStatus, username)
-        if err != nil {
-            return nil, err
-        }
-        return &user.Username, nil
-    }
-
-    return nil, errors.New("Invalid username or password")
-
-}
-
-func (u *UserRepository) InsertUser(username string, password string, role string) error {
 	var sqlStmt string
 
-	sqlStmt = `INSERT INTO users (username, password, role, created_at) VALUES (?, ?, ?, ?);`
+	sqlStmt = `SELECT id, username, email, password, role, created_at, updated_at FROM users WHERE username = ? AND password = ?`
 
-	_, err := u.db.Exec(sqlStmt, username, password, role, time.Now())
+	row := u.db.QueryRow(sqlStmt, username, password)
+
+	var user User
+	err := row.Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Role,
+		&user.Password,
+		&user.Created_at,
+		&user.Updated_at,
+	)
+
+	if err != nil {
+		return nil, errors.New("Invalid username or password")
+	}
+
+	return &user.Role, nil	
+}
+
+func (u *UserRepository) InsertUser(username string, email string, password string, role string) error {
+	var sqlStmt string
+
+	sqlStmt = `INSERT INTO users (username, email, password, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?);`
+
+	_, err := u.db.Exec(sqlStmt, username, email, password, role, time.Now(), time.Now())
 	if err != nil {
 		return err
 	}
