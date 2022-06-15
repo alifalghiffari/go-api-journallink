@@ -89,7 +89,16 @@ func (u *UserRepository) Login(username string, password string) (*string, error
 		return nil, errors.New("Invalid username or password")
 	}
 
-	return &user.Role, nil	
+	if user.Username == username && user.Password == password {
+		sqlStmtStatus := `UPDATE users SET Updated_at = TRUE WHERE username = ?;`
+		_, err := u.db.Exec(sqlStmtStatus, username)
+		if err != nil {
+			return nil, err
+		}
+		return &user.Username, nil
+	}
+
+	return nil, errors.New("Invalid username or password")
 }
 
 func (u *UserRepository) InsertUser(username string, email string, password string, role string) error {
