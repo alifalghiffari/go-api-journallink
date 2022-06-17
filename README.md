@@ -20,7 +20,7 @@
 
 - `POST`: `/api/user/login`
 - `POST`: `/api/user/logout`
-- `GET`: `/api/products`
+- `GET`: `/api/journal`
 - `POST`: `/api/cart/add`
 - `GET`: `/api/cart/clear`
 - `GET`: `/api/carts`
