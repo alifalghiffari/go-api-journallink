@@ -44,7 +44,7 @@ func (api *API) login(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	res, err := api.usersRepo.Login(user.Username, user.Password)
+	res, err := api.usersRepo.Login(user.Email, user.Password)
 
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
@@ -88,6 +88,7 @@ func (api *API) login(w http.ResponseWriter, req *http.Request) {
 	})
 
 	json.NewEncoder(w).Encode(LoginSuccessResponse{Username: *res, Token: tokenString})
+	w.Write([]byte("login success"))
 }
 
 func (api *API) register(w http.ResponseWriter, req *http.Request) {
@@ -104,6 +105,8 @@ func (api *API) register(w http.ResponseWriter, req *http.Request) {
         w.WriteHeader(http.StatusInternalServerError)
         return
     }
+
+	w.Write([]byte("register success"))
 }
 
 func (api *API) logout(w http.ResponseWriter, req *http.Request) {

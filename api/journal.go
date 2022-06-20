@@ -10,6 +10,7 @@ type JournalListErrorResponse struct {
 }
 
 type JournalList struct {
+	ID        int64  `json:"id"`
 	UserID int64  `json:"user_id"`
 	Isi    string `json:"isi"`
 	Status string `json:"status"`
@@ -65,35 +66,17 @@ func (api *API) JournalCreate(w http.ResponseWriter, req *http.Request) {
     }
 }
 
-// func (api *API) JournalCreate(w http.ResponseWriter, req *http.Request) {
-// 	api.AllowOrigin(w, req)
-// 	encoder := json.NewEncoder(w)
+func (api *API) JournalUpdate(w http.ResponseWriter, req *http.Request) {
+	var journal JournalList
+	err := json.NewDecoder(req.Body).Decode(&journal)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-// 	var journal JournalList
-// 	decoder := json.NewDecoder(req.Body)
-// 	err := decoder.Decode(&journal)
-// 	defer func() {
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			encoder.Encode(DashboardErrorResponse{Error: err.Error()})
-// 			return
-// 		}
-// 	} ()
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	err = api.journalRepo.InsertJournal(journal.Isi, journal.Status, journal.DateSubmit)
-// 	defer func() {
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			encoder.Encode(DashboardErrorResponse{Error: err.Error()})
-// 			return
-// 		}
-// 	} 	()
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	encoder.Encode(journal)
-// }
+	err = api.journalRepo.UpdateJournal(journal.Isi)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -37,12 +38,12 @@ func (j *JournalRepository) FetchJournals() ([]Journal, error) {
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, errors.New("No Available Journal")
 		}
 		journals = append(journals, journal)
 	}
 
-	return journals, nil
+	return journals, err
 }
 
 func (j *JournalRepository) FetchJournalbyID(id int64) (Journal, error) {
@@ -148,12 +149,12 @@ func (j *JournalRepository) InsertJournal(UserID int64, Isi string, Status strin
 	return nil
 }
 
-func (j *JournalRepository) UpdateJournal(id int64, Isi string) error {
+func (j *JournalRepository) UpdateJournal(Isi string) error {
 	var sqlStmt string
 
 	sqlStmt = `UPDATE journals SET isi = ? WHERE id = ?;`
 
-	_, err := j.db.Exec(sqlStmt, Isi, id)
+	_, err := j.db.Exec(sqlStmt, Isi)
 
 	if err != nil {
 		return err
@@ -162,16 +163,16 @@ func (j *JournalRepository) UpdateJournal(id int64, Isi string) error {
 	return nil
 }
 
-func (j *JournalRepository) DeleteJournal(id int64) error {
-	var sqlStmt string
+// func (j *JournalRepository) DeleteJournal(id int64) error {
+// 	var sqlStmt string
 
-	sqlStmt = `DELETE FROM journals WHERE id = ?;`
+// 	sqlStmt = `DELETE FROM journals WHERE id = ?;`
 
-	_, err := j.db.Exec(sqlStmt, id)
+// 	_, err := j.db.Exec(sqlStmt, id)
 
-	if err != nil {
-		panic(err)
-	}
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

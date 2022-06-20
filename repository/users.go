@@ -67,12 +67,12 @@ func (u *UserRepository) FetchUsers() ([]User, error) {
 	return users, nil
 }
 
-func (u *UserRepository) Login(username string, password string) (*string, error) {
+func (u *UserRepository) Login(email string, password string) (*string, error) {
 	var sqlStmt string
 
-	sqlStmt = `SELECT id, username, email, password, role, created_at, updated_at FROM users WHERE username = ? AND password = ?`
+	sqlStmt = `SELECT id, username, email, password, role, created_at, updated_at FROM users WHERE email = ? AND password = ?`
 
-	row := u.db.QueryRow(sqlStmt, username, password)
+	row := u.db.QueryRow(sqlStmt, email, password)
 
 	var user User
 	err := row.Scan(
@@ -89,7 +89,8 @@ func (u *UserRepository) Login(username string, password string) (*string, error
 		return nil, errors.New("Invalid username or password")
 	}
 
-	return &user.Role, nil
+	return &user.Username, nil
+
 }
 
 func (u *UserRepository) InsertUser(username string, email string, password string, role string) error {
