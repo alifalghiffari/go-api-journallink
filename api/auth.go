@@ -16,8 +16,11 @@ type User struct {
 }
 
 type LoginSuccessResponse struct {
-	Username string `json:"username"`
 	Token    string `json:"token"`
+}
+
+type RegisterSuccessResponse struct {
+	Message  string `json:"message"`
 }
 
 type AuthErrorResponse struct {
@@ -87,13 +90,13 @@ func (api *API) login(w http.ResponseWriter, req *http.Request) {
 		Path:    "/",
 	})
 
-	json.NewEncoder(w).Encode(LoginSuccessResponse{Username: *res, Token: tokenString})
-	w.Write([]byte("login success"))
+	json.NewEncoder(w).Encode(LoginSuccessResponse{Token: tokenString})
 }
 
 func (api *API) register(w http.ResponseWriter, req *http.Request) {
     api.AllowOrigin(w, req)
     var user User
+	encoder := json.NewEncoder(w)
     err := json.NewDecoder(req.Body).Decode(&user)
     if err != nil {
         w.WriteHeader(http.StatusBadRequest)
@@ -106,34 +109,38 @@ func (api *API) register(w http.ResponseWriter, req *http.Request) {
         return
     }
 
-	w.Write([]byte("register success"))
+	registerResponse := RegisterSuccessResponse{
+        Message: "success register",
+	}
+
+	encoder.Encode(registerResponse)
 }
 
-func (api *API) logout(w http.ResponseWriter, req *http.Request) {
-	api.AllowOrigin(w, req)
+// func (api *API) logout(w http.ResponseWriter, req *http.Request) {
+// 	api.AllowOrigin(w, req)
 
-	token, err := req.Cookie("token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			// return unauthorized ketika token kosong
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		// return bad request ketika field token tidak ada
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if token.Value == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+// 	token, err := req.Cookie("token")
+// 	if err != nil {
+// 		if err == http.ErrNoCookie {
+// 			// return unauthorized ketika token kosong
+// 			w.WriteHeader(http.StatusUnauthorized)
+// 			return
+// 		}
+// 		// return bad request ketika field token tidak ada
+// 		w.WriteHeader(http.StatusBadRequest)
+// 		return
+// 	}
+// 	if token.Value == "" {
+// 		w.WriteHeader(http.StatusUnauthorized)
+// 		return
+// 	}
 
-	c := http.Cookie{
-		Name:   "token",
-		MaxAge: -1,
-	}
-	http.SetCookie(w, &c)
+// 	c := http.Cookie{
+// 		Name:   "token",
+// 		MaxAge: -1,
+// 	}
+// 	http.SetCookie(w, &c)
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("logged out"))
-}
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write([]byte("logged out"))
+// }

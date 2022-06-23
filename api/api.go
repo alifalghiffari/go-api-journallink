@@ -21,16 +21,19 @@ func NewAPI(usersRepo repository.UserRepository, journalRepo repository.JournalR
 
 	// API Authorization
 	mux.Handle("/api/user/login", api.POST(http.HandlerFunc(api.login)))
-	mux.Handle("/api/user/logout", api.POST(http.HandlerFunc(api.logout)))
+	// mux.Handle("/api/user/logout", api.POST(http.HandlerFunc(api.logout)))
 	mux.Handle("/api/user/register", api.POST(http.HandlerFunc(api.register)))
 	
 	// API journal
 	mux.Handle("/api/journal/list", api.GET(api.AuthMiddleWare(http.HandlerFunc(api.JournalList))))
 	mux.Handle("/api/journal/create", api.POST(api.AuthMiddleWare(http.HandlerFunc(api.JournalCreate))))
 	mux.Handle("/api/journal/update", api.POST(api.AuthMiddleWare(http.HandlerFunc(api.JournalUpdate))))
+	mux.Handle("/api/journal/detail", api.POST(api.AuthMiddleWare(http.HandlerFunc(api.JournalDetailByID))))
 
 	// API Admin Dashboard
 	mux.Handle("/api/admin/dashboard", api.GET(api.AuthMiddleWare(api.AdminMiddleware(http.HandlerFunc(api.getAdminDashboard)))))
+	mux.Handle("/api/admin/journal/detail", api.POST(api.AuthMiddleWare(api.AdminMiddleware(http.HandlerFunc(api.AdminGetDetailJournal)))))
+	mux.Handle("/api/admin/journal/update", api.POST(api.AuthMiddleWare(api.AdminMiddleware(http.HandlerFunc(api.JournalUpdateStatus)))))
 
 	return api
 }

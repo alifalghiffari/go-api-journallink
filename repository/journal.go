@@ -46,94 +46,124 @@ func (j *JournalRepository) FetchJournals() ([]Journal, error) {
 	return journals, err
 }
 
-func (j *JournalRepository) FetchJournalbyID(id int64) (Journal, error) {
+func (j *JournalRepository) GetJournalByID(id int64) (Journal, error) {
 	var sqlStatement string
 	var journal Journal
 
 	sqlStatement = `SELECT id, user_id, isi, status, date_submit, created_at, updated_at FROM journals WHERE id = ?`
 
-	row := j.db.QueryRow(sqlStatement, id)
-	journal.ID = id
-		err := row.Scan(
-			&journal.ID,
-			&journal.UserID,
-			&journal.Isi,
-			&journal.Status,
-			&journal.DateSubmit,
-			&journal.Created_at,
-			&journal.Updated_at,
-		)
+	err := j.db.QueryRow(sqlStatement, id).Scan(
+		&journal.ID,
+		&journal.UserID,
+		&journal.Isi,
+		&journal.Status,
+		&journal.DateSubmit,
+		&journal.Created_at,
+		&journal.Updated_at,
+	)
 
 	if err != nil {
-		return Journal{}, err
+		return journal, errors.New("No Available Journal")
 	}
 
-	return journal, err
+	return journal, nil
 }
 
-func (j *JournalRepository) FetchJournalbyStatus(status string) ([]Journal, error) {
-	var sqlStatement string
-	var journals []Journal
+// func (j *JournalRepository) GetListJournalByMonth(month int, year int) ([]Journal, error) {
+// 	var sqlStatement string
+// 	var journals []Journal
 
-	sqlStatement = `SELECT id, user_id, isi, status, date_submit, created_at, updated_at FROM journals WHERE status = ?`
+// 	sqlStatement = `SELECT id, user_id, isi, status, date_submit, created_at, updated_at FROM journals WHERE MONTH(date_submit) = ? AND YEAR(date_submit) = ?`
 
-	rows, err := j.db.Query(sqlStatement, status)
-	if err != nil {
-		return nil, err
-	}
+// 	rows, err := j.db.Query(sqlStatement, month, year)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	var journal Journal
-	for rows.Next() {
-		err := rows.Scan(
-			&journal.ID,
-			&journal.UserID,
-			&journal.Isi,
-			&journal.Status,
-			&journal.DateSubmit,
-			&journal.Created_at,
-			&journal.Updated_at,
-		)
+// 	var journal Journal
+// 	for rows.Next() {
+// 		err := rows.Scan(
+// 			&journal.ID,
+// 			&journal.UserID,
+// 			&journal.Isi,
+// 			&journal.Status,
+// 			&journal.DateSubmit,
+// 			&journal.Created_at,
+// 			&journal.Updated_at,
+// 		)
 
-		if err != nil {
-			return nil, err
-		}
-		journals = append(journals, journal)
-	}
+// 		if err != nil {
+// 			return nil, errors.New("No Available Journal")
+// 		}
+// 		journals = append(journals, journal)
+// 	}
 
-	return journals, nil
-}
+// 	return journals, err
+// }
 
-func (j *JournalRepository) FetchJournalbyUserID(userID int64) ([]Journal, error) {
-	var sqlStatement string
-	var journals []Journal
+// func (j *JournalRepository) GetDetailJournalByWeek(week int) ([]Journal, error) {
+// 	var sqlStatement string
+// 	var journals []Journal
 
-	sqlStatement = `SELECT id, user_id, isi, status, date_submit, created_at, updated_at FROM journals WHERE user_id = ?`
+// 	sqlStatement = `SELECT id, user_id, isi, status, date_submit, created_at, updated_at FROM journals WHERE WEEK(date_submit) = ?`
 
-	rows, err := j.db.Query(sqlStatement, userID)
-	if err != nil {
-		return nil, err
-	}
+// 	rows, err := j.db.Query(sqlStatement, week)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	var journal Journal
-	for rows.Next() {
-		err := rows.Scan(
-			&journal.ID,
-			&journal.UserID,
-			&journal.Isi,
-			&journal.Status,
-			&journal.DateSubmit,
-			&journal.Created_at,
-			&journal.Updated_at,
-		)
+// 	var journal Journal
+// 	for rows.Next() {
+// 		err := rows.Scan(
+// 			&journal.ID,
+// 			&journal.UserID,
+// 			&journal.Isi,
+// 			&journal.Status,
+// 			&journal.DateSubmit,
+// 			&journal.Created_at,
+// 			&journal.Updated_at,
+// 		)
 
-		if err != nil {
-			return nil, err
-		}
-		journals = append(journals, journal)
-	}
+// 		if err != nil {
+// 			return nil, errors.New("No Available Journal")
+// 		}
+// 		journals = append(journals, journal)
+// 	}
 
-	return journals, nil
-}
+// 	return journals, err
+// }
+
+// func (j *JournalRepository) GetDetailJournalByStatus(status string) ([]Journal, error) {
+// 	var sqlStatement string
+// 	var journals []Journal
+
+// 	sqlStatement = `SELECT id, user_id, isi, status, date_submit, created_at, updated_at FROM journals WHERE status = ?`
+
+// 	rows, err := j.db.Query(sqlStatement, status)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	var journal Journal
+// 	for rows.Next() {
+// 		err := rows.Scan(
+// 			&journal.ID,
+// 			&journal.UserID,
+// 			&journal.Isi,
+// 			&journal.Status,
+// 			&journal.DateSubmit,
+// 			&journal.Created_at,
+// 			&journal.Updated_at,
+// 		)
+
+// 		if err != nil {
+// 			return nil, errors.New("No Available Journal")
+// 		}
+// 		journals = append(journals, journal)
+// 	}
+
+// 	return journals, err
+// }
 
 func (j *JournalRepository) InsertJournal(UserID int64, Isi string, Status string, DateSubmit string) error {
 	var sqlStmt string
@@ -149,12 +179,26 @@ func (j *JournalRepository) InsertJournal(UserID int64, Isi string, Status strin
 	return nil
 }
 
-func (j *JournalRepository) UpdateJournal(Isi string) error {
+func (j *JournalRepository) UpdateJournal(Isi string, id int64) error {
 	var sqlStmt string
 
 	sqlStmt = `UPDATE journals SET isi = ? WHERE id = ?;`
 
-	_, err := j.db.Exec(sqlStmt, Isi)
+	_, err := j.db.Exec(sqlStmt, Isi, id)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (j *JournalRepository) UpdateStatus(Status string, id int64) error {
+	var sqlStmt string
+
+	sqlStmt = `UPDATE journals SET status = ? WHERE id = ?;`
+
+	_, err := j.db.Exec(sqlStmt, Status, id)
 
 	if err != nil {
 		return err

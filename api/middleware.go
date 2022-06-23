@@ -94,20 +94,20 @@ func (api *API) AdminMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (api *API) JournalMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		api.AllowOrigin(w, r)
-		encoder := json.NewEncoder(w)
-		role := r.Context().Value("role")
-		if role != "mahasiswa" {
-			w.WriteHeader(http.StatusForbidden)
-			encoder.Encode(AuthErrorResponse{Error: "forbidden access"})
-			return
-		}
+// func (api *API) JournalMiddleware(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		api.AllowOrigin(w, r)
+// 		encoder := json.NewEncoder(w)
+// 		role := r.Context().Value("role")
+// 		if role != "mahasiswa" {
+// 			w.WriteHeader(http.StatusForbidden)
+// 			encoder.Encode(AuthErrorResponse{Error: "forbidden access"})
+// 			return
+// 		}
 
-		next.ServeHTTP(w, r)
-	})
-}
+// 		next.ServeHTTP(w, r)
+// 	})
+// }
 
 func (api *API) GET(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
