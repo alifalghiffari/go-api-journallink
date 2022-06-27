@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"errors"
 	"strconv"
 )
 
@@ -96,6 +97,12 @@ func (api *API) JournalCreate(w http.ResponseWriter, req *http.Request) {
         return
     }
 
+	if journal.Status== "" {
+		w.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(DashboardErrorResponse{Error: errors.New("status is required").Error()})
+        return
+	}
+
     err = api.journalRepo.InsertJournal(user_id, journal.Isi, journal.Status, journal.DateSubmit)
     if err != nil {
         w.WriteHeader(http.StatusInternalServerError)
@@ -116,13 +123,14 @@ func (api *API) JournalUpdate(w http.ResponseWriter, req *http.Request) {
 
 	id, _ := strconv.ParseInt(req.URL.Query().Get("id"), 0, 64)
 	err := json.NewDecoder(req.Body).Decode(&journal)
+
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		encoder.Encode(DashboardErrorResponse{Error: err.Error()})
 		return
 	}
 
-	err = api.journalRepo.UpdateJournal(journal.Isi, id)
+	err = api.journalRepo.UpdateJournal(journal.Isi, id, journal.UserID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -132,21 +140,6 @@ func (api *API) JournalUpdate(w http.ResponseWriter, req *http.Request) {
 		Message: "update journal success",
 		Data:     journal,
 	}
-		
+
 	encoder.Encode(journalResponse)
 }
-
-// func (api *API) JournalUpdateStatus(w http.ResponseWriter, req *http.Request) {
-// 	var journal JournalList
-// 	err := json.NewDecoder(req.Body).Decode(&journal)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	err = api.journalRepo.UpdateStatus(journal.Status)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		return
-// 	}
-// }

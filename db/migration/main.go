@@ -36,6 +36,12 @@ CREATE TABLE IF NOT EXISTS journals (
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABEL IF NOT EXISTS notifications (
+	id integer not null primary key AUTOINCREMENT,
+	user_id integer default null,
+	message varchar(255) not null,
+);
+
 INSERT INTO users (
 	username,
 	email,

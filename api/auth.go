@@ -34,6 +34,7 @@ var jwtKey = []byte("key")
 // jwt.StandardClaims ditambahkan sebagai embedded type untuk provide standart claim yang biasanya ada pada JWT
 type Claims struct {
 	Username string
+	UserID   string
 	Role     string
 	jwt.StandardClaims
 }
@@ -115,32 +116,3 @@ func (api *API) register(w http.ResponseWriter, req *http.Request) {
 
 	encoder.Encode(registerResponse)
 }
-
-// func (api *API) logout(w http.ResponseWriter, req *http.Request) {
-// 	api.AllowOrigin(w, req)
-
-// 	token, err := req.Cookie("token")
-// 	if err != nil {
-// 		if err == http.ErrNoCookie {
-// 			// return unauthorized ketika token kosong
-// 			w.WriteHeader(http.StatusUnauthorized)
-// 			return
-// 		}
-// 		// return bad request ketika field token tidak ada
-// 		w.WriteHeader(http.StatusBadRequest)
-// 		return
-// 	}
-// 	if token.Value == "" {
-// 		w.WriteHeader(http.StatusUnauthorized)
-// 		return
-// 	}
-
-// 	c := http.Cookie{
-// 		Name:   "token",
-// 		MaxAge: -1,
-// 	}
-// 	http.SetCookie(w, &c)
-
-// 	w.WriteHeader(http.StatusOK)
-// 	w.Write([]byte("logged out"))
-// }

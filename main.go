@@ -17,7 +17,8 @@ func main() {
 
 	usersRepo := repository.NewUserRepository(db)
 	journalRepo := repository.NewJournalRepository(db)
+	notificationRepo := repository.NewNotificationRepository(db)
 
-	mainAPI := api.NewAPI(*usersRepo, *journalRepo)
+	mainAPI := api.NewAPI(*usersRepo, *journalRepo, *notificationRepo)
 	mainAPI.Start()
 }

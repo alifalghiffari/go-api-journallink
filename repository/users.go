@@ -117,3 +117,23 @@ func (u *UserRepository) FetchUserRole(username string) (*string, error) {
 
 	return &role, err
 }
+
+func (u *UserRepository) GetUserByID(id int64) (User, error) {
+	var sqlStmt string
+	var user User
+
+	sqlStmt = `SELECT id, username, email, password, role, created_at, updated_at FROM users WHERE id = ?;`
+
+	row := u.db.QueryRow(sqlStmt, id)
+	err := row.Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Role,
+		&user.Password,
+		&user.Created_at,
+		&user.Updated_at,
+	)
+
+	return user, err
+}
